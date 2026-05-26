@@ -1,10 +1,10 @@
 {
-  "name": "SetPilot - AI Workout Logger",
-  "short_name": "SetPilot",
+  "name": "SetPlot - AI Workout Logger",
+  "short_name": "SetPlot",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#090b0e",
-  "theme_color": "#101418",
+  "theme_color": "#090b0e",
   "orientation": "portrait",
   "icons": [
     {

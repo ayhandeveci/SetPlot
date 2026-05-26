@@ -3,21 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#101418" />
+  <meta name="theme-color" content="#090b0e" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="SetPilot" />
+  <meta name="apple-mobile-web-app-title" content="SetPlot" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/icon-192.svg" />
   <link rel="stylesheet" href="style.css" />
-  <title>SetPilot</title>
+  <title>SetPlot</title>
 </head>
 <body>
   <main class="app-shell">
-    <header class="app-header">
+
+    <header class="topbar">
       <div>
         <p class="eyebrow">AI Workout Logger</p>
-        <h1>SetPilot</h1>
+        <h1>SetPlot</h1>
       </div>
       <div class="timer-card">
         <span id="timer">00:00</span>
@@ -25,105 +26,208 @@
       </div>
     </header>
 
-    <section class="hero-card">
-      <div>
-        <h2>Bugünkü antrenmanı yönet</h2>
-        <p>Eski CSV kayıtlarına göre öneri al, setleri hızlı gir, sonunda Google Drive’a CSV olarak kaydet.</p>
+    <section id="screenSetup" class="screen active">
+      <div class="hero-card">
+        <h2>Bugünkü antrenmanı seç</h2>
+        <p>Bu mock versiyonda Google Drive ve API akışı simüle edilir. Gerçek kullanım hissini telefonda test etmek için hazırdır.</p>
       </div>
-      <button id="startWorkoutBtn" class="primary-btn">Start Workout</button>
+
+      <div class="workout-grid">
+        <button class="workout-option" data-day="Day_A">
+          <strong>Day A</strong>
+          <span>Push focus</span>
+        </button>
+        <button class="workout-option selected" data-day="Day_B">
+          <strong>Day B</strong>
+          <span>Back + hinge</span>
+        </button>
+        <button class="workout-option" data-day="Day_C">
+          <strong>Day C</strong>
+          <span>Leg + accessory</span>
+        </button>
+      </div>
+
+      <button id="prepareBtn" class="primary-btn full">Prepare Workout</button>
     </section>
 
-    <section class="setup-card">
-      <div class="section-title">
-        <h3>Session Setup</h3>
-        <span class="pill">Config later</span>
+    <section id="screenPrepare" class="screen">
+      <div class="section-header">
+        <button class="ghost-btn" data-go="setup">← Back</button>
+        <span id="prepareDayPill" class="pill">Day B</span>
       </div>
 
-      <div class="config-placeholder">
-        <strong>API & Drive Import</strong>
-        <p>Bu bölüm tasarım bittikten sonra aktif edilecek. Şimdilik manuel mock data ile devam ediyoruz.</p>
+      <div class="hero-card">
+        <h2>Workout hazırlığı</h2>
+        <p>Mock sistem eski CSV’leri tarıyormuş gibi çalışır ve sabit GPT formatında kg önerileri üretir.</p>
       </div>
 
-      <button id="loadMockBtn" class="secondary-btn">Load Mock Previous Workouts</button>
+      <div class="status-stack">
+        <div class="status-row done">
+          <span>1</span>
+          <p>Google Drive klasörü tarandı</p>
+        </div>
+        <div class="status-row done">
+          <span>2</span>
+          <p>Eski CSV logları okundu</p>
+        </div>
+        <div class="status-row done">
+          <span>3</span>
+          <p>Mock GPT önerileri hazırlandı</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <h3>Bugünkü plan</h3>
+          <span id="totalSetsPill" class="pill muted">0 set</span>
+        </div>
+        <div id="recommendationList" class="list"></div>
+      </div>
+
+      <button id="startWorkoutBtn" class="primary-btn full">Start Workout</button>
     </section>
 
-    <section class="plan-card">
-      <div class="section-title">
-        <h3>Today's Plan</h3>
-        <span id="planStatus" class="pill muted">Waiting</span>
-      </div>
-      <div id="planList" class="plan-list">
-        <p class="empty-state">Eski antrenmanlar yüklendiğinde öneriler burada görünecek.</p>
-      </div>
-    </section>
-
-    <section class="entry-card">
-      <div class="section-title">
-        <h3>Active Set Entry</h3>
-        <span class="pill">Fast log</span>
+    <section id="screenActive" class="screen">
+      <div class="active-header">
+        <div>
+          <p id="activeDay" class="eyebrow">Day B</p>
+          <h2 id="activeProgress">Set 1 / 1</h2>
+        </div>
+        <button id="openEditBtn" class="secondary-small">Edit</button>
       </div>
 
-      <form id="setForm" class="set-form">
-        <label>
-          Hareket
-          <input id="exerciseInput" type="text" placeholder="Chest Press Machine" required />
-        </label>
+      <div class="exercise-card">
+        <p class="eyebrow">Current Exercise</p>
+        <h2 id="currentExercise">Chest Press Machine</h2>
 
+        <div class="target-box">
+          <div>
+            <small>Recommended</small>
+            <strong id="targetKg">75 kg</strong>
+          </div>
+          <div>
+            <small>Target reps</small>
+            <strong id="targetReps">8</strong>
+          </div>
+          <div>
+            <small>Set</small>
+            <strong id="targetSet">1/3</strong>
+          </div>
+        </div>
+
+        <p id="recommendationReason" class="reason-text">Son kayda göre kontrollü artış önerildi.</p>
+      </div>
+
+      <form id="activeSetForm" class="card set-form">
         <div class="grid-3">
           <label>
-            Kg
-            <input id="weightInput" type="number" step="0.5" placeholder="75" required />
+            Actual kg
+            <input id="actualKg" type="number" step="0.5" required />
           </label>
           <label>
-            Tekrar
-            <input id="repsInput" type="number" placeholder="8" required />
+            Reps
+            <input id="actualReps" type="number" required />
           </label>
           <label>
             RIR
-            <input id="rirInput" type="number" step="0.5" placeholder="1" />
+            <input id="actualRir" type="number" step="0.5" placeholder="1" />
           </label>
         </div>
 
         <label>
-          Not / ağrı
-          <textarea id="noteInput" rows="2" placeholder="Sağ diz arkası gergin, son tekrar zor..."></textarea>
+          Note / pain
+          <textarea id="actualNote" rows="2" placeholder="Ağrı, form, zorlanma..."></textarea>
         </label>
 
-        <button class="primary-btn full" type="submit">Add Set</button>
+        <button class="primary-btn full" type="submit">Save Set & Next</button>
       </form>
-    </section>
 
-    <section class="timeline-card">
-      <div class="section-title">
-        <h3>Workout Timeline</h3>
-        <span id="setCount" class="pill muted">0 set</span>
-      </div>
-      <div id="timeline" class="timeline">
-        <p class="empty-state">Set girdikçe burada akacak.</p>
+      <div class="bottom-actions">
+        <button id="prevSetBtn" class="secondary-btn">Previous</button>
+        <button id="finishBtn" class="danger-btn">Finish Workout</button>
       </div>
     </section>
 
-    <section class="summary-card">
-      <div class="section-title">
-        <h3>End Summary</h3>
-        <span class="pill">CSV ready</span>
+    <section id="screenSummary" class="screen">
+      <div class="hero-card">
+        <p class="eyebrow">Workout Completed</p>
+        <h2 id="summaryTitle">Day B Summary</h2>
+        <p id="summaryFileName">Day_B_2026-05-27_log.csv</p>
       </div>
 
       <div class="summary-grid">
         <div>
-          <strong id="totalSets">0</strong>
+          <strong id="summarySets">0</strong>
           <small>Total Sets</small>
         </div>
         <div>
-          <strong id="totalVolume">0</strong>
+          <strong id="summaryVolume">0</strong>
           <small>Volume</small>
+        </div>
+        <div>
+          <strong id="summaryMissed">0</strong>
+          <small>Missed Targets</small>
+        </div>
+        <div>
+          <strong id="summaryNotes">0</strong>
+          <small>Notes</small>
         </div>
       </div>
 
-      <button id="downloadCsvBtn" class="secondary-btn full">Download CSV Preview</button>
-      <button id="saveDriveBtn" class="primary-btn full disabled" disabled>Save to Google Drive later</button>
+      <div class="card">
+        <div class="card-title">
+          <h3>CSV Preview</h3>
+          <span class="pill muted">Mock save</span>
+        </div>
+        <div id="csvPreview" class="csv-preview"></div>
+      </div>
+
+      <button id="downloadBtn" class="secondary-btn full">Download CSV Preview</button>
+      <button id="newWorkoutBtn" class="primary-btn full">New Workout</button>
     </section>
+
   </main>
+
+  <div id="editSheet" class="sheet hidden">
+    <div class="sheet-backdrop"></div>
+    <div class="sheet-panel">
+      <div class="sheet-handle"></div>
+      <div class="card-title">
+        <h3>Edit Previous Sets</h3>
+        <button id="closeEditBtn" class="ghost-btn">Close</button>
+      </div>
+      <div id="editList" class="edit-list"></div>
+    </div>
+  </div>
+
+  <div id="editModal" class="modal hidden">
+    <div class="modal-card">
+      <h3>Edit Set</h3>
+      <form id="editForm" class="set-form">
+        <input type="hidden" id="editIndex" />
+        <div class="grid-3">
+          <label>
+            Kg
+            <input id="editKg" type="number" step="0.5" required />
+          </label>
+          <label>
+            Reps
+            <input id="editReps" type="number" required />
+          </label>
+          <label>
+            RIR
+            <input id="editRir" type="number" step="0.5" />
+          </label>
+        </div>
+        <label>
+          Note
+          <textarea id="editNote" rows="2"></textarea>
+        </label>
+        <button class="primary-btn full" type="submit">Save Change</button>
+        <button id="cancelEditModalBtn" class="secondary-btn full" type="button">Cancel</button>
+      </form>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 </body>
