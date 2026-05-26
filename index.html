@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#101418" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="SetPilot" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.svg" />
+  <link rel="stylesheet" href="style.css" />
+  <title>SetPilot</title>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">AI Workout Logger</p>
+        <h1>SetPilot</h1>
+      </div>
+      <div class="timer-card">
+        <span id="timer">00:00</span>
+        <small>Session</small>
+      </div>
+    </header>
+
+    <section class="hero-card">
+      <div>
+        <h2>Bugünkü antrenmanı yönet</h2>
+        <p>Eski CSV kayıtlarına göre öneri al, setleri hızlı gir, sonunda Google Drive’a CSV olarak kaydet.</p>
+      </div>
+      <button id="startWorkoutBtn" class="primary-btn">Start Workout</button>
+    </section>
+
+    <section class="setup-card">
+      <div class="section-title">
+        <h3>Session Setup</h3>
+        <span class="pill">Config later</span>
+      </div>
+
+      <div class="config-placeholder">
+        <strong>API & Drive Import</strong>
+        <p>Bu bölüm tasarım bittikten sonra aktif edilecek. Şimdilik manuel mock data ile devam ediyoruz.</p>
+      </div>
+
+      <button id="loadMockBtn" class="secondary-btn">Load Mock Previous Workouts</button>
+    </section>
+
+    <section class="plan-card">
+      <div class="section-title">
+        <h3>Today's Plan</h3>
+        <span id="planStatus" class="pill muted">Waiting</span>
+      </div>
+      <div id="planList" class="plan-list">
+        <p class="empty-state">Eski antrenmanlar yüklendiğinde öneriler burada görünecek.</p>
+      </div>
+    </section>
+
+    <section class="entry-card">
+      <div class="section-title">
+        <h3>Active Set Entry</h3>
+        <span class="pill">Fast log</span>
+      </div>
+
+      <form id="setForm" class="set-form">
+        <label>
+          Hareket
+          <input id="exerciseInput" type="text" placeholder="Chest Press Machine" required />
+        </label>
+
+        <div class="grid-3">
+          <label>
+            Kg
+            <input id="weightInput" type="number" step="0.5" placeholder="75" required />
+          </label>
+          <label>
+            Tekrar
+            <input id="repsInput" type="number" placeholder="8" required />
+          </label>
+          <label>
+            RIR
+            <input id="rirInput" type="number" step="0.5" placeholder="1" />
+          </label>
+        </div>
+
+        <label>
+          Not / ağrı
+          <textarea id="noteInput" rows="2" placeholder="Sağ diz arkası gergin, son tekrar zor..."></textarea>
+        </label>
+
+        <button class="primary-btn full" type="submit">Add Set</button>
+      </form>
+    </section>
+
+    <section class="timeline-card">
+      <div class="section-title">
+        <h3>Workout Timeline</h3>
+        <span id="setCount" class="pill muted">0 set</span>
+      </div>
+      <div id="timeline" class="timeline">
+        <p class="empty-state">Set girdikçe burada akacak.</p>
+      </div>
+    </section>
+
+    <section class="summary-card">
+      <div class="section-title">
+        <h3>End Summary</h3>
+        <span class="pill">CSV ready</span>
+      </div>
+
+      <div class="summary-grid">
+        <div>
+          <strong id="totalSets">0</strong>
+          <small>Total Sets</small>
+        </div>
+        <div>
+          <strong id="totalVolume">0</strong>
+          <small>Volume</small>
+        </div>
+      </div>
+
+      <button id="downloadCsvBtn" class="secondary-btn full">Download CSV Preview</button>
+      <button id="saveDriveBtn" class="primary-btn full disabled" disabled>Save to Google Drive later</button>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
