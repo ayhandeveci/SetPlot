@@ -1,16 +1,8 @@
 {
-  "name": "SetPlot - AI Workout Logger",
+  "name": "SetPlot",
   "short_name": "SetPlot",
-  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#090b0e",
   "theme_color": "#090b0e",
-  "orientation": "portrait",
-  "icons": [
-    {
-      "src": "icons/icon.svg",
-      "sizes": "512x512",
-      "type": "image/svg+xml"
-    }
-  ]
+  "start_url": "./index.html"
 }

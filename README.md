@@ -1,10 +1,22 @@
-# SetPlot V5 - Local Recommendation Engine
 
-- Eski antrenmanlar API'ye gönderilmez.
-- App eski CSV loglarını okuyacak şekilde tasarlandı.
-- Bu pakette `sample_logs/` altında örnek CSV dosyaları var.
-- Charge ayarları `config/charge_rules.json` içindedir.
-- İlk set önerisi: `son 3 antrenmanın ortalama kg + charge`.
-- Charge; ağrı/not, hedef tekrar altında kalma veya düşük RIR durumunda uygulanmaz.
+# SetPlot V6
 
-Drive'a bağlayınca `sample_logs` dosyaları yerine gerçek Drive klasöründeki CSV'ler okunacak.
+## Features
+
+- Session based keys
+- Google Drive OAuth
+- CSV upload
+- Recommendation engine
+- Mobile PWA
+- GitHub Pages ready
+
+## Required Inputs
+
+- OpenAI API Key
+- Google OAuth Client ID
+- Google Drive Folder ID
+- Google Mail
+
+## Deploy
+
+Upload directly to GitHub Pages repository.
