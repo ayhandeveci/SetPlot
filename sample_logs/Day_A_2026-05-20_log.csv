@@ -1,7 +1,0 @@
-workout_day,date,exercise,set_no,target_reps,recommended_kg,actual_kg,actual_reps,rir,note,created_at
-Day_A,2026-05-20,Chest Press Machine,1,8,75,75,9,1,,2026-05-20T18:30:00.000Z
-Day_A,2026-05-20,Chest Press Machine,2,8,75,75,8,1,,2026-05-20T18:30:00.000Z
-Day_A,2026-05-20,Chest Press Machine,3,8,75,75,8,1,,2026-05-20T18:30:00.000Z
-Day_A,2026-05-20,Shoulder Press DB,1,8,16,16,8,1,,2026-05-20T18:30:00.000Z
-Day_A,2026-05-20,Shoulder Press DB,2,8,16,16,8,1,,2026-05-20T18:30:00.000Z
-Day_A,2026-05-20,Shoulder Press DB,3,8,16,16,8,1,,2026-05-20T18:30:00.000Z

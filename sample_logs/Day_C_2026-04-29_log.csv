@@ -1,7 +1,0 @@
-workout_day,date,exercise,set_no,target_reps,recommended_kg,actual_kg,actual_reps,rir,note,created_at
-Day_C,2026-04-29,Leg Press,1,8,90,90,8,2,,2026-04-29T18:30:00.000Z
-Day_C,2026-04-29,Leg Press,2,8,90,90,8,2,,2026-04-29T18:30:00.000Z
-Day_C,2026-04-29,Leg Press,3,8,90,90,8,2,,2026-04-29T18:30:00.000Z
-Day_C,2026-04-29,Leg Curl,1,10,40,40,10,2,,2026-04-29T18:30:00.000Z
-Day_C,2026-04-29,Leg Curl,2,10,40,40,10,2,,2026-04-29T18:30:00.000Z
-Day_C,2026-04-29,Leg Curl,3,10,40,40,10,2,,2026-04-29T18:30:00.000Z
