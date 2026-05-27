@@ -1,112 +1,123 @@
 
 const SESSION = {
-  openaiKey: "",
-  googleClientId: "",
-  driveFolderId: "",
-  googleEmail: "",
+  clientId: "",
+  folderId: "",
+  googleMail: "",
   accessToken: ""
 };
 
 function saveSession() {
   sessionStorage.setItem(
-    "setplot_session",
+    "setplot_v7_session",
     JSON.stringify(SESSION)
   );
 }
 
 function loadSession() {
-  const raw = sessionStorage.getItem("setplot_session");
+  const raw = sessionStorage.getItem(
+    "setplot_v7_session"
+  );
 
   if (!raw) return;
 
-  const data = JSON.parse(raw);
+  Object.assign(
+    SESSION,
+    JSON.parse(raw)
+  );
 
-  Object.assign(SESSION, data);
+  document.getElementById("clientId").value =
+    SESSION.clientId || "";
 
-  document.getElementById("openaiKey").value =
-    SESSION.openaiKey || "";
+  document.getElementById("folderId").value =
+    SESSION.folderId || "";
 
-  document.getElementById("googleClientId").value =
-    SESSION.googleClientId || "";
-
-  document.getElementById("driveFolderId").value =
-    SESSION.driveFolderId || "";
-
-  document.getElementById("googleEmail").value =
-    SESSION.googleEmail || "";
+  document.getElementById("googleMail").value =
+    SESSION.googleMail || "";
 
   updateStatus("Previous session restored.");
 }
 
-function updateStatus(message) {
-  document.getElementById("status").textContent = message;
+function updateStatus(text) {
+  document.getElementById("statusBox")
+    .textContent = text;
 }
 
-document.getElementById("unlockBtn").onclick = () => {
+document.getElementById("saveSessionBtn")
+.onclick = () => {
 
-  SESSION.openaiKey =
-    document.getElementById("openaiKey").value.trim();
+  SESSION.clientId =
+    document.getElementById("clientId")
+      .value.trim();
 
-  SESSION.googleClientId =
-    document.getElementById("googleClientId").value.trim();
+  SESSION.folderId =
+    document.getElementById("folderId")
+      .value.trim();
 
-  SESSION.driveFolderId =
-    document.getElementById("driveFolderId").value.trim();
-
-  SESSION.googleEmail =
-    document.getElementById("googleEmail").value.trim();
+  SESSION.googleMail =
+    document.getElementById("googleMail")
+      .value.trim();
 
   saveSession();
 
-  updateStatus("Session unlocked.");
+  updateStatus("Session saved.");
 };
 
 let tokenClient;
 
-document.getElementById("connectBtn").onclick = async () => {
+document.getElementById("connectBtn")
+.onclick = async () => {
 
-  tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: SESSION.googleClientId,
+  tokenClient =
+    google.accounts.oauth2.initTokenClient({
 
-    scope:
-      "https://www.googleapis.com/auth/drive.file",
+      client_id: SESSION.clientId,
 
-    callback: async (tokenResponse) => {
+      scope:
+        "https://www.googleapis.com/auth/drive.file",
 
-      SESSION.accessToken =
-        tokenResponse.access_token;
+      callback: async (tokenResponse) => {
 
-      saveSession();
+        SESSION.accessToken =
+          tokenResponse.access_token;
 
-      updateStatus(
-        "Google Drive connected successfully."
-      );
-    }
-  });
+        saveSession();
+
+        updateStatus(
+          "Google Drive connected."
+        );
+      }
+    });
 
   tokenClient.requestAccessToken();
 };
 
-document.querySelectorAll(".workout-btn").forEach(btn => {
+document.querySelectorAll(".workout")
+.forEach(btn => {
+
   btn.onclick = () => {
-    document.querySelectorAll(".workout-btn")
-      .forEach(x => x.classList.remove("selected"));
+
+    document.querySelectorAll(".workout")
+      .forEach(x =>
+        x.classList.remove("selected")
+      );
 
     btn.classList.add("selected");
   };
 });
 
-document.getElementById("loadLogsBtn").onclick = async () => {
+document.getElementById("analyzeBtn")
+.onclick = () => {
 
-  const workout =
-    document.querySelector(".workout-btn.selected")
+  const day =
+    document.querySelector(".workout.selected")
       .dataset.day;
 
-  document.getElementById("recommendationBox")
-    .textContent = `
-Workout: ${workout}
+  document.getElementById(
+    "recommendationBox"
+  ).textContent = `
+Workout: ${day}
 
-Last 3 average:
+Previous 3 average:
 - 60 kg
 - 8.3 reps
 - RIR 1.3
@@ -116,24 +127,35 @@ Charge:
 
 Recommended:
 62.5 kg
+
+Logic:
+avg(last_3_kg) + charge
 `;
 };
 
-document.getElementById("uploadTestBtn").onclick = async () => {
+document.getElementById("uploadBtn")
+.onclick = async () => {
 
   if (!SESSION.accessToken) {
-    updateStatus("Drive connection required.");
+    updateStatus(
+      "Connect Google Drive first."
+    );
     return;
   }
 
-  const csvContent =
+  const csv =
 `exercise,kg,reps
 Chest Press,62.5,8`;
 
   const metadata = {
-    name: "SetPlot_Test_Log.csv",
+    name:
+      "Day_B_" +
+      new Date().toISOString().slice(0,10) +
+      "_log.csv",
+
     mimeType: "text/csv",
-    parents: [SESSION.driveFolderId]
+
+    parents: [SESSION.folderId]
   };
 
   const form = new FormData();
@@ -149,7 +171,7 @@ Chest Press,62.5,8`;
   form.append(
     "file",
     new Blob(
-      [csvContent],
+      [csv],
       { type: "text/csv" }
     )
   );
@@ -159,16 +181,22 @@ Chest Press,62.5,8`;
     {
       method: "POST",
       headers: new Headers({
-        Authorization: "Bearer " + SESSION.accessToken
+        Authorization:
+          "Bearer " +
+          SESSION.accessToken
       }),
       body: form
     }
   );
 
   if (response.ok) {
-    updateStatus("CSV uploaded successfully.");
+    updateStatus(
+      "Workout CSV uploaded."
+    );
   } else {
-    updateStatus("CSV upload failed.");
+    updateStatus(
+      "Upload failed."
+    );
   }
 };
 

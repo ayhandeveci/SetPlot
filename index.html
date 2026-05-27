@@ -1,56 +1,62 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<meta name="theme-color" content="#090b0e" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-title" content="SetPlot" />
-<link rel="manifest" href="manifest.json" />
-<link rel="stylesheet" href="style.css" />
-<title>SetPlot</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#090b0e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SetPlot">
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="style.css">
+<title>SetPlot V7</title>
 </head>
 <body>
 
 <main class="app">
 
 <section class="card">
-  <p class="eyebrow">Session Setup</p>
+  <p class="eyebrow">Drive Session</p>
   <h1>SetPlot</h1>
 
-  <label>OpenAI API Key
-    <input id="openaiKey" type="password" />
+  <label>
+    Google OAuth Client ID
+    <input id="clientId" type="text">
   </label>
 
-  <label>Google OAuth Client ID
-    <input id="googleClientId" type="text" />
+  <label>
+    Google Drive Folder ID
+    <input id="folderId" type="text" value="1HXyoM6evWv7DGNBFKA-j-qsXZ7ei55NG">
   </label>
 
-  <label>Google Drive Folder ID
-    <input id="driveFolderId" type="text" value="1HXyoM6evWv7DGNBFKA-j-qsXZ7ei55NG" />
+  <label>
+    Google Mail
+    <input id="googleMail" type="email" value="ayhan@thacapple.com">
   </label>
 
-  <label>Google Mail
-    <input id="googleEmail" type="email" />
-  </label>
+  <button id="saveSessionBtn" class="primary">
+    Save Session
+  </button>
 
-  <button id="unlockBtn" class="primary">Unlock Session</button>
-  <button id="connectBtn" class="secondary">Connect Google Drive</button>
+  <button id="connectBtn" class="secondary">
+    Connect Google Drive
+  </button>
 
-  <div id="status" class="status">Session locked.</div>
+  <div id="statusBox" class="status">
+    Waiting...
+  </div>
 </section>
 
 <section class="card">
   <h2>Workout Selection</h2>
 
-  <div class="workout-grid">
-    <button class="workout-btn selected" data-day="Day_A">Day A</button>
-    <button class="workout-btn" data-day="Day_B">Day B</button>
-    <button class="workout-btn" data-day="Day_C">Day C</button>
+  <div class="grid">
+    <button class="workout selected" data-day="Day_A">Day A</button>
+    <button class="workout" data-day="Day_B">Day B</button>
+    <button class="workout" data-day="Day_C">Day C</button>
   </div>
 
-  <button id="loadLogsBtn" class="primary">
-    Load Previous Logs
+  <button id="analyzeBtn" class="primary">
+    Analyze Previous Logs
   </button>
 </section>
 
@@ -58,15 +64,15 @@
   <h2>Recommendation Engine</h2>
 
   <div id="recommendationBox">
-    Waiting...
+    Waiting for analysis...
   </div>
 </section>
 
 <section class="card">
   <h2>CSV Upload Test</h2>
 
-  <button id="uploadTestBtn" class="primary">
-    Upload Test CSV
+  <button id="uploadBtn" class="primary">
+    Upload Test Workout CSV
   </button>
 </section>
 
