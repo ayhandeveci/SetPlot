@@ -337,3 +337,56 @@ input:focus, textarea:focus { border-color: var(--accent); }
   border: 1px solid var(--line);
   box-shadow: var(--shadow);
 }
+
+
+/* V4 API gate */
+.locked {
+  display: none;
+}
+
+.locked.unlocked {
+  display: block;
+}
+
+.api-gate.hidden {
+  display: none;
+}
+
+.api-test-card {
+  margin-bottom: 14px;
+  padding: 18px;
+  border: 1px solid rgba(120,255,154,.20);
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgba(18,23,29,.96), rgba(10,14,18,.96));
+  box-shadow: var(--shadow);
+}
+
+.api-test-card p {
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.api-result {
+  margin-top: 12px;
+  padding: 16px;
+  border-radius: 20px;
+  background: var(--card2);
+  border: 1px solid var(--line);
+  font-weight: 900;
+  text-align: center;
+}
+
+.api-result.success {
+  color: var(--accent);
+  font-size: 28px;
+}
+
+.api-result.error {
+  color: var(--danger);
+  font-size: 14px;
+}
+
+.api-result.muted {
+  color: var(--muted);
+  font-size: 14px;
+}

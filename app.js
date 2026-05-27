@@ -29,6 +29,70 @@ const state = {
 
 const $ = (id) => document.getElementById(id);
 
+function getApiKey() {
+  return sessionStorage.getItem("setplot_openai_api_key") || "";
+}
+
+function unlockApp(apiKey) {
+  sessionStorage.setItem("setplot_openai_api_key", apiKey);
+  $("apiGate").classList.add("hidden");
+  $("appContent").classList.add("unlocked");
+}
+
+function checkExistingApiKey() {
+  const existing = getApiKey();
+  if (existing) {
+    $("apiGate").classList.add("hidden");
+    $("appContent").classList.add("unlocked");
+  }
+}
+
+async function generateWorkoutNumber() {
+  const apiKey = getApiKey();
+  const result = $("apiResult");
+
+  if (!apiKey) {
+    result.className = "api-result error";
+    result.textContent = "API key yok. Önce key gir.";
+    return;
+  }
+
+  result.className = "api-result muted";
+  result.textContent = "GPT çağrısı yapılıyor...";
+
+  const workoutLabel = state.selectedDay.replace("_", " ");
+
+  try {
+    const response = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4.1-mini",
+        input: `You are inside a workout logging app. For ${workoutLabel}, return only one integer between 1 and 100 as a theoretical workout readiness score. No explanation.`
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error?.message || "API request failed.");
+    }
+
+    const text = data.output_text || "";
+    const match = text.match(/\d+/);
+    const number = match ? match[0] : text.trim();
+
+    result.className = "api-result success";
+    result.textContent = `${workoutLabel}: ${number}`;
+  } catch (err) {
+    result.className = "api-result error";
+    result.textContent = `API error: ${err.message}`;
+  }
+}
+
 function showScreen(name) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
   $(`screen${name}`).classList.add("active");
@@ -303,3 +367,16 @@ $("editForm").addEventListener("submit", saveEditedSet);
 $("cancelEditModalBtn").addEventListener("click", closeEditModal);
 $("downloadBtn").addEventListener("click", downloadCsv);
 $("newWorkoutBtn").addEventListener("click", newWorkout);
+
+
+// V4 API test listeners
+$("apiKeyForm").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const key = $("apiKeyInput").value.trim();
+  if (!key) return;
+  unlockApp(key);
+});
+
+$("generateNumberBtn").addEventListener("click", generateWorkoutNumber);
+
+checkExistingApiKey();

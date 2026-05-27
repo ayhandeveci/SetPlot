@@ -8,7 +8,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="SetPlot" />
   <link rel="manifest" href="manifest.json" />
-  <link rel="apple-touch-icon" href="icons/icon-192.svg" />
+  <link rel="apple-touch-icon" href="icons/icon-180.png" />
+  <link rel="icon" href="icons/icon-192.png" />
   <link rel="stylesheet" href="style.css" />
   <title>SetPlot</title>
 </head>
@@ -26,10 +27,38 @@
       </div>
     </header>
 
+    <section id="apiGate" class="api-gate">
+      <div class="hero-card">
+        <p class="eyebrow">Session Access</p>
+        <h2>API key ile başla</h2>
+        <p>OpenAI API key sadece bu oturumda tutulur. Sayfayı kapatınca silinir.</p>
+
+        <form id="apiKeyForm" class="set-form">
+          <label>
+            OpenAI API Key
+            <input id="apiKeyInput" type="password" placeholder="sk-..." autocomplete="off" required />
+          </label>
+          <button class="primary-btn full" type="submit">Unlock SetPlot</button>
+        </form>
+      </div>
+    </section>
+
+    <section id="appContent" class="locked">
+
     <section id="screenSetup" class="screen active">
       <div class="hero-card">
         <h2>Bugünkü antrenmanı seç</h2>
         <p>Bu mock versiyonda Google Drive ve API akışı simüle edilir. Gerçek kullanım hissini telefonda test etmek için hazırdır.</p>
+      </div>
+
+      <div class="api-test-card">
+        <div>
+          <p class="eyebrow">API Test</p>
+          <h3>Workout readiness score</h3>
+          <p>Seçilen antrenman türüne göre GPT’den 1-100 arası teorik bir sayı üretir.</p>
+        </div>
+        <button id="generateNumberBtn" class="secondary-btn full" type="button">Generate Test Number</button>
+        <div id="apiResult" class="api-result muted">Henüz sayı üretilmedi.</div>
       </div>
 
       <div class="workout-grid">
@@ -186,6 +215,7 @@
       <button id="newWorkoutBtn" class="primary-btn full">New Workout</button>
     </section>
 
+    </section>
   </main>
 
   <div id="editSheet" class="sheet hidden">
