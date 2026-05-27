@@ -1,0 +1,154 @@
+const chargeRules={"default":{"charge_kg":0,"round_to_kg":2.5,"min_avg_reps_for_charge_buffer":1,"min_avg_rir_for_charge":1,"pain_blocks_charge":true,"failed_target_blocks_charge":true},"exercise_rules":{"Chest Press Machine":{"charge_kg":2.5,"round_to_kg":2.5},"Seated Row Machine":{"charge_kg":2.5,"round_to_kg":2.5},"Lat Pulldown":{"charge_kg":2.5,"round_to_kg":2.5},"RDL":{"charge_kg":0,"round_to_kg":2.5},"Leg Press":{"charge_kg":0,"round_to_kg":5},"Shoulder Press DB":{"charge_kg":1,"round_to_kg":1},"Biceps Curl DB":{"charge_kg":1,"round_to_kg":1}}};
+const programs={Day_A:[["Chest Press Machine",3,8],["Shoulder Press DB",3,8]],Day_B:[["Seated Row Machine",3,8],["Lat Pulldown",3,8],["RDL",2,8],["Biceps Curl DB",2,10]],Day_C:[["Leg Press",3,8],["Leg Curl",3,10]]};
+const history=[
+["Day_B","2026-05-01","Seated Row Machine",1,8,55,8,2,""],["Day_B","2026-05-08","Seated Row Machine",1,8,57.5,8,2,""],["Day_B","2026-05-15","Seated Row Machine",1,8,60,8,2,""],["Day_B","2026-05-22","Seated Row Machine",1,8,60,9,1,""],
+["Day_B","2026-05-01","Seated Row Machine",2,8,55,8,2,""],["Day_B","2026-05-08","Seated Row Machine",2,8,57.5,8,2,""],["Day_B","2026-05-15","Seated Row Machine",2,8,60,8,2,""],["Day_B","2026-05-22","Seated Row Machine",2,8,60,8,1,""],
+["Day_B","2026-05-01","Lat Pulldown",1,8,50,8,2,""],["Day_B","2026-05-08","Lat Pulldown",1,8,52.5,8,2,""],["Day_B","2026-05-15","Lat Pulldown",1,8,55,8,1,""],["Day_B","2026-05-22","Lat Pulldown",1,8,55,8,1,""],
+["Day_B","2026-05-01","RDL",1,8,18,8,2,""],["Day_B","2026-05-08","RDL",1,8,20,8,1,""],["Day_B","2026-05-15","RDL",1,8,20,8,1,""],["Day_B","2026-05-22","RDL",1,8,20,8,1,""],
+["Day_B","2026-05-01","Biceps Curl DB",1,10,10,10,2,""],["Day_B","2026-05-08","Biceps Curl DB",1,10,12,10,2,""],["Day_B","2026-05-15","Biceps Curl DB",1,10,12.5,10,1,""],["Day_B","2026-05-22","Biceps Curl DB",1,10,12.5,11,1,""],
+["Day_A","2026-05-08","Chest Press Machine",1,8,72.5,8,2,""],["Day_A","2026-05-15","Chest Press Machine",1,8,75,9,1,""],["Day_A","2026-05-22","Chest Press Machine",1,8,75,9,1,""],
+["Day_C","2026-05-08","Leg Press",1,8,100,8,2,""],["Day_C","2026-05-15","Leg Press",1,8,100,8,1,""],["Day_C","2026-05-22","Leg Press",1,8,100,8,1,"mild knee caution"]
+].map(r=>({day:r[0],date:r[1],ex:r[2],set:r[3],target:r[4],kg:r[5],reps:r[6],rir:r[7],note:r[8]}));
+const state={day:"Day_B",plan:[],flat:[],idx:0,logs:[],t:null,int:null}; const $=id=>document.getElementById(id);
+function screen(id){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));$(id).classList.add("active")}
+function rule(ex){return {...chargeRules.default,...(chargeRules.exercise_rules[ex]||{})}}
+function round(v,step){return Math.round(v/step)*step}
+function hist(day,ex,set){return history.filter(r=>r.day===day&&r.ex===ex&&r.set===set).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,4)}
+function rec(day,ex,set,target){let h=hist(day,ex,set), last3=h.slice(0,3), ru=rule(ex); if(!last3.length)return{kg:0,reason:"Geçmiş veri yok; manuel kg gir.",h}; let avgKg=last3.reduce((s,r)=>s+r.kg,0)/last3.length, avgReps=last3.reduce((s,r)=>s+r.reps,0)/last3.length, avgRir=last3.reduce((s,r)=>s+r.rir,0)/last3.length, pain=last3.some(r=>r.note), failed=avgReps<target; let can=!pain&&!failed&&avgReps>=target+ru.min_avg_reps_for_charge_buffer&&avgRir>=ru.min_avg_rir_for_charge; let ch=(set===1&&can)?ru.charge_kg:0; let why=pain?"ağrı/not var; charge yok":failed?"hedef tekrar ortalaması düşük; charge yok":set!==1?"ilk set değil; charge yok":can?`+${ch} kg charge uygulandı`:"charge koşulu oluşmadı"; return{kg:round(avgKg+ch,ru.round_to_kg),reason:`Son 3 avg: ${avgKg.toFixed(1)} kg, ${avgReps.toFixed(1)} reps, RIR ${avgRir.toFixed(1)}. ${why}.`,h}}
+function prepare(){state.plan=programs[state.day].map(x=>{let r=rec(state.day,x[0],1,x[2]);return{ex:x[0],sets:x[1],reps:x[2],kg:r.kg,reason:r.reason,h:r.h}});state.flat=[];state.logs=[];state.idx=0;state.plan.forEach(p=>{for(let i=1;i<=p.sets;i++){let r=rec(state.day,p.ex,i,p.reps);state.flat.push({ex:p.ex,set:i,total:p.sets,reps:p.reps,kg:r.kg||p.kg,reason:r.reason})}});$("dayPill").textContent=state.day.replace("_"," ");$("totalSets").textContent=state.flat.length+" set";renderRecs();screen("prepare")}
+function renderRecs(){let el=$("recList");el.innerHTML="";state.plan.forEach(p=>{let hx=p.h.map(r=>`${r.date}: ${r.kg}kg x ${r.reps}`).join(" · ")||"Yok";let d=document.createElement("div");d.className="item";d.innerHTML=`<b>${p.ex}</b><div class="meta">${p.sets} set x ${p.reps} tekrar · Öneri: ${p.kg} kg<br>${p.reason}<br><br>Son 4: ${hx}</div>`;el.appendChild(d)})}
+function start(){if(!state.int){state.t=new Date();state.int=setInterval(()=>{let s=Math.floor((new Date()-state.t)/1000);$("timer").textContent=String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")},1000)}load();screen("active")}
+function load(){let it=state.flat[state.idx]; if(!it)return finish(); let old=state.logs.find(l=>l.i===state.idx);$("activeDay").textContent=state.day.replace("_"," ");$("progress").textContent=`Set ${state.idx+1} / ${state.flat.length}`;$("exName").textContent=it.ex;$("kg").textContent=it.kg+" kg";$("reps").textContent=it.reps;$("setNo").textContent=`${it.set}/${it.total}`;$("reason").textContent=it.reason;$("actualKg").value=old?old.actual_kg:it.kg;$("actualReps").value=old?old.actual_reps:it.reps;$("actualRir").value=old?old.rir:"";$("note").value=old?old.note:""}
+function save(e){e.preventDefault();let it=state.flat[state.idx],log={i:state.idx,workout_day:state.day,date:today(),exercise:it.ex,set_no:it.set,target_reps:it.reps,recommended_kg:it.kg,actual_kg:+$("actualKg").value,actual_reps:+$("actualReps").value,rir:$("actualRir").value,note:$("note").value,created_at:new Date().toISOString()};let k=state.logs.findIndex(l=>l.i===state.idx);if(k>=0)state.logs[k]=log;else state.logs.push(log);state.idx++;state.idx>=state.flat.length?finish():load()}
+function finish(){let rows=state.logs.sort((a,b)=>a.i-b.i),vol=rows.reduce((s,r)=>s+r.actual_kg*r.actual_reps,0);$("sumTitle").textContent=state.day.replace("_"," ")+" Summary";$("fileName").textContent=file();$("sumSets").textContent=rows.length;$("sumVol").textContent=vol.toLocaleString("tr-TR")+" kg";$("sumMiss").textContent=rows.filter(r=>r.actual_reps<r.target_reps).length;$("sumNotes").textContent=rows.filter(r=>r.note).length;$("csvPreview").textContent=csv(rows);screen("summary")}
+function csv(rows){let h=["workout_day","date","exercise","set_no","target_reps","recommended_kg","actual_kg","actual_reps","rir","note","created_at"],esc=v=>`"${String(v??"").replaceAll('"','""')}"`;return[h.join(","),...rows.map(r=>h.map(k=>esc(r[k])).join(","))].join("\n")}
+function today(){return new Date().toISOString().slice(0,10)} function file(){return `${state.day}_${today()}_log.csv`}
+document.querySelectorAll(".wbtn").forEach(b=>b.onclick=()=>{state.day=b.dataset.day;document.querySelectorAll(".wbtn").forEach(x=>x.classList.toggle("selected",x===b))});$("prepareBtn").onclick=prepare;$("backSetup").onclick=()=>screen("setup");$("startBtn").onclick=start;$("setForm").onsubmit=save;$("prevBtn").onclick=()=>{if(state.idx>0){state.idx--;load()}};$("finishBtn").onclick=finish;$("downloadBtn").onclick=()=>{let blob=new Blob([csv(state.logs.sort((a,b)=>a.i-b.i))],{type:"text/csv"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=file();a.click();URL.revokeObjectURL(url)};$("newBtn").onclick=()=>{state.logs=[];state.idx=0;screen("setup")};
+$("editBtn").onclick=()=>{let list=$("editList");list.innerHTML="";state.flat.forEach((it,i)=>{let l=state.logs.find(x=>x.i===i),b=document.createElement("button");b.className="editrow";b.innerHTML=`<b>${i+1}. ${it.ex} · Set ${it.set}</b><div class="meta">${l?`${l.actual_kg} kg x ${l.actual_reps} · RIR ${l.rir||"-"}`:"Henüz girilmedi"}</div>`;b.onclick=()=>{let l=state.logs.find(x=>x.i===i);$("editIndex").value=i;$("editKg").value=l?l.actual_kg:it.kg;$("editReps").value=l?l.actual_reps:it.reps;$("editRir").value=l?l.rir:"";$("editNote").value=l?l.note:"";$("modal").classList.remove("hidden")};list.appendChild(b)});$("sheet").classList.remove("hidden")};$("closeSheet").onclick=()=>$("sheet").classList.add("hidden");$("cancelEdit").onclick=()=>$("modal").classList.add("hidden");$("editForm").onsubmit=e=>{e.preventDefault();let i=+$("editIndex").value,it=state.flat[i],log={i,workout_day:state.day,date:today(),exercise:it.ex,set_no:it.set,target_reps:it.reps,recommended_kg:it.kg,actual_kg:+$("editKg").value,actual_reps:+$("editReps").value,rir:$("editRir").value,note:$("editNote").value,created_at:new Date().toISOString()};let k=state.logs.findIndex(x=>x.i===i);if(k>=0)state.logs[k]=log;else state.logs.push(log);$("modal").classList.add("hidden");$("sheet").classList.add("hidden");load()};
+
+
+// ===== V8 SESSION-FIRST FLOW =====
+
+async function findExistingWorkoutFile(fileName) {
+
+  if (!DRIVE_SESSION.accessToken) return null;
+
+  const q =
+    `name='${fileName}' and '${DRIVE_SESSION.folderId}' in parents and trashed=false`;
+
+  const url =
+    "https://www.googleapis.com/drive/v3/files?q=" +
+    encodeURIComponent(q);
+
+  const response = await fetch(url, {
+    headers: {
+      Authorization:
+        "Bearer " + DRIVE_SESSION.accessToken
+    }
+  });
+
+  const data = await response.json();
+
+  if (data.files && data.files.length > 0) {
+    return data.files[0];
+  }
+
+  return null;
+}
+
+async function uploadWorkoutCsv(csvContent) {
+
+  if (!DRIVE_SESSION.accessToken) return;
+
+  const fileName =
+    `${state.selectedDay}_${today()}_log.csv`;
+
+  const existing =
+    await findExistingWorkoutFile(fileName);
+
+  if (!existing) {
+
+    const metadata = {
+      name: fileName,
+      mimeType: "text/csv",
+      parents: [DRIVE_SESSION.folderId]
+    };
+
+    const form = new FormData();
+
+    form.append(
+      "metadata",
+      new Blob(
+        [JSON.stringify(metadata)],
+        { type: "application/json" }
+      )
+    );
+
+    form.append(
+      "file",
+      new Blob(
+        [csvContent],
+        { type: "text/csv" }
+      )
+    );
+
+    await fetch(
+      "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+      {
+        method: "POST",
+        headers: {
+          Authorization:
+            "Bearer " + DRIVE_SESSION.accessToken
+        },
+        body: form
+      }
+    );
+
+  } else {
+
+    await fetch(
+      `https://www.googleapis.com/upload/drive/v3/files/${existing.id}?uploadType=media`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization:
+            "Bearer " + DRIVE_SESSION.accessToken,
+          "Content-Type": "text/csv"
+        },
+        body: csvContent
+      }
+    );
+  }
+}
+
+const originalSaveCurrentSet = saveCurrentSet;
+
+saveCurrentSet = async function(e) {
+
+  originalSaveCurrentSet(e);
+
+  try {
+
+    const rows =
+      state.logs
+        .slice()
+        .sort((a,b) => a.flat_index - b.flat_index);
+
+    const csv =
+      toCsv(rows);
+
+    await uploadWorkoutCsv(csv);
+
+    updateDriveStatus(
+      "Workout autosaved to Drive.",
+      "success"
+    );
+
+  } catch(err) {
+
+    updateDriveStatus(
+      "Drive autosave failed.",
+      "error"
+    );
+  }
+};
