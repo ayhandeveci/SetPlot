@@ -369,3 +369,17 @@ input:focus, textarea:focus { border-color: var(--accent); }
 }
 
 .sugg-value.accent { color: var(--accent); }
+
+/* ─── NEXT DAY BANNER ───────────────────────────────────────────────── */
+.next-day-banner {
+  margin-bottom: 14px;
+  padding: 12px 16px;
+  border-radius: 18px;
+  background: rgba(120,255,154,.10);
+  border: 1px solid rgba(120,255,154,.25);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+  letter-spacing: .03em;
+}

@@ -27,10 +27,9 @@
 
     <!-- SETUP SCREEN -->
     <section id="screenSetup" class="screen active">
-      <div class="hero-card">
-        <h2>Antrenmanı seç</h2>
-        <p>Salon veya ev, kaldığın yerden devam et.</p>
-      </div>
+
+      <!-- Next day banner -->
+      <div id="nextDayBanner" class="next-day-banner hidden"></div>
 
       <div class="day-group">
         <p class="day-label eyebrow">Gün A — Horizontal Push + Pull + Legs</p>
@@ -51,7 +50,7 @@
         <div class="workout-grid">
           <button class="workout-option" data-day="Day_B_Salon">
             <strong>Salon</strong>
-            <span>Shoulder Press · Lat Pulldown · RDL · Curl</span>
+            <span>Shoulder · Lat Pulldown · RDL · Curl</span>
           </button>
           <button class="workout-option" data-day="Day_B_Ev">
             <strong>Ev</strong>
@@ -107,7 +106,6 @@
           </div>
         </div>
 
-        <!-- Suggestion Box -->
         <div id="suggestionBox" class="suggestion-box hidden">
           <div class="sugg-row">
             <span class="sugg-label">Minimum</span>
@@ -122,21 +120,17 @@
 
       <form id="activeSetForm" class="card set-form">
         <div class="grid-3">
-          <label>
-            Kg
+          <label>Kg
             <input id="actualKg" type="number" step="0.5" placeholder="75" required />
           </label>
-          <label>
-            Reps
+          <label>Reps
             <input id="actualReps" type="number" placeholder="8" required />
           </label>
-          <label>
-            RIR
+          <label>RIR
             <input id="actualRir" type="number" step="0.5" placeholder="1" />
           </label>
         </div>
-        <label>
-          Not / Ağrı
+        <label>Not / Ağrı
           <textarea id="actualNote" rows="2" placeholder="Ağrı, form, zorlanma..."></textarea>
         </label>
         <button class="primary-btn full" type="submit">Kaydet & İleri</button>
@@ -166,6 +160,8 @@
         <h2 id="summaryTitle">Summary</h2>
         <p id="summaryFileName">file.csv</p>
       </div>
+
+      <div id="summaryNextDay" class="next-day-banner"></div>
 
       <div class="summary-grid">
         <div>
