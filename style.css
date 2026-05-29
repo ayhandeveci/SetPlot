@@ -13,7 +13,11 @@
 
 * { box-sizing: border-box; }
 
-html { background: var(--bg); }
+html {
+  background: var(--bg);
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
 
 body {
   margin: 0;
@@ -25,7 +29,7 @@ body {
   color: var(--text);
 }
 
-button, input, textarea { font: inherit; }
+button, input, textarea { font: inherit; touch-action: manipulation; }
 .hidden { display: none !important; }
 
 .app-shell {
@@ -205,6 +209,8 @@ input, textarea {
   background: #0d1116;
   color: var(--text);
   outline: none;
+  font-size: 16px; /* iOS zoom engellemek için — 16px altı zoom tetikler */
+  touch-action: manipulation;
 }
 
 input:focus, textarea:focus { border-color: var(--accent); }
@@ -401,3 +407,19 @@ input:focus, textarea:focus { border-color: var(--accent); }
 
 .history-status.loaded { color: var(--accent); }
 .history-status.error  { color: var(--danger);  }
+
+/* ─── OPTIONS BUTTON ────────────────────────────────────────────────── */
+.options-btn {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  border: 0;
+  border-radius: 18px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 18px;
+  letter-spacing: 4px;
+  cursor: pointer;
+  touch-action: manipulation;
+}

@@ -362,7 +362,46 @@ function addCustomExercise() {
 }
 $("addCustomExerciseBtn").addEventListener("click", addCustomExercise);
 
-// ─── EDIT SHEET ────────────────────────────────────────────────────────────
+// ─── OPTIONS SHEET ─────────────────────────────────────────────────────────
+function openOptionsSheet()  { $("optionsSheet").classList.remove("hidden"); }
+function closeOptionsSheet() { $("optionsSheet").classList.add("hidden"); }
+
+$("optionsBtn").addEventListener("click", openOptionsSheet);
+$("optionsBackdrop").addEventListener("click", closeOptionsSheet);
+
+// Yarıda Bırak — state localStorage'da zaten var, sadece setup'a dön
+$("pauseBtn").addEventListener("click", () => {
+  closeOptionsSheet();
+  clearInterval(state.timerInterval);
+  state.timerInterval = null;
+  showResumeIfAny();
+  showScreen("Setup");
+});
+
+// İptal Et — onay modal
+$("cancelWorkoutBtn").addEventListener("click", () => {
+  closeOptionsSheet();
+  $("cancelConfirmModal").classList.remove("hidden");
+});
+
+$("dismissCancelBtn").addEventListener("click", () => {
+  $("cancelConfirmModal").classList.add("hidden");
+});
+
+$("confirmCancelBtn").addEventListener("click", () => {
+  $("cancelConfirmModal").classList.add("hidden");
+  // Her şeyi sıfırla
+  state.flatSets = []; state.logs = []; state.currentIndex = 0;
+  state.startedAt = null; state.history = [];
+  clearInterval(state.timerInterval); state.timerInterval = null;
+  $("timer").textContent = "00:00";
+  localStorage.removeItem(STORAGE_KEY);
+  applyNextDaySuggestion();
+  showResumeIfAny();
+  showScreen("Setup");
+});
+
+
 function openEditSheet()  { renderEditList(); $("editSheet").classList.remove("hidden"); }
 function closeEditSheet() { $("editSheet").classList.add("hidden"); }
 $("openEditBtn").addEventListener("click", openEditSheet);
@@ -463,13 +502,29 @@ function toCsv(rows) {
   return [headers.join(","), ...rows.map(row => headers.map(h => escape(row[h])).join(","))].join("\n");
 }
 
-function exportCsv() {
+async function exportCsv() {
   const rows = state.logs.slice().sort((a, b) => a.flat_index - b.flat_index);
   if (!rows.length) return;
-  const blob = new Blob([toCsv(rows)], { type: "text/csv;charset=utf-8" });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement("a");
-  a.href = url; a.download = workoutFileName(); a.click();
+
+  const csvContent = toCsv(rows);
+  const fileName   = workoutFileName();
+  const blob       = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
+  const file       = new File([blob], fileName, { type: "text/csv" });
+
+  // iOS Safari: Web Share API — "Dosyalara Kaydet" seçeneği çıkar
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title: fileName });
+      return;
+    } catch (e) {
+      if (e.name === "AbortError") return; // kullanıcı iptal etti
+    }
+  }
+
+  // Fallback: normal download (desktop / Android)
+  const url = URL.createObjectURL(blob);
+  const a   = document.createElement("a");
+  a.href = url; a.download = fileName; a.click();
   URL.revokeObjectURL(url);
 }
 $("downloadBtn").addEventListener("click", exportCsv);

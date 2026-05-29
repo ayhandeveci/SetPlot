@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
   <meta name="theme-color" content="#090b0e" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -149,6 +149,8 @@
         <button id="prevSetBtn" class="secondary-btn">← Önceki</button>
         <button id="finishBtn" class="danger-btn">Bitir & CSV</button>
       </div>
+
+      <button id="optionsBtn" class="options-btn">• • •</button>
     </section>
 
     <!-- SUMMARY SCREEN -->
@@ -180,6 +182,31 @@
       <button id="newWorkoutBtn" class="primary-btn full">Yeni Antrenman</button>
     </section>
   </main>
+
+  <!-- OPTIONS SHEET -->
+  <div id="optionsSheet" class="sheet hidden">
+    <div class="sheet-backdrop" id="optionsBackdrop"></div>
+    <div class="sheet-panel">
+      <div class="sheet-handle"></div>
+      <h3 style="margin-bottom:16px">Seçenekler</h3>
+      <button id="pauseBtn" class="secondary-btn full" style="margin-bottom:10px">
+        Yarıda Bırak — Sonra Devam Et
+      </button>
+      <button id="cancelWorkoutBtn" class="danger-btn full">
+        Antrenmanı İptal Et
+      </button>
+    </div>
+  </div>
+
+  <!-- CANCEL CONFIRM MODAL -->
+  <div id="cancelConfirmModal" class="modal hidden">
+    <div class="modal-card">
+      <h3>Emin misin?</h3>
+      <p style="color:var(--muted);margin-bottom:18px">Tüm kayıtlar silinecek, bu antrenman iptal edilecek.</p>
+      <button id="confirmCancelBtn" class="danger-btn full" style="margin-bottom:10px">Evet, İptal Et</button>
+      <button id="dismissCancelBtn" class="secondary-btn full">Vazgeç</button>
+    </div>
+  </div>
 
   <!-- EDIT SHEET -->
   <div id="editSheet" class="sheet hidden">
