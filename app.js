@@ -1,4 +1,21 @@
 // ─── WORKOUT DEFINITIONS ───────────────────────────────────────────────────
+const BODYWEIGHT_EXERCISES = new Set([
+  "Push-up", "Şınav",
+  "Diamond Push-up", "Elmas Şınav",
+  "Pike Push-up", "Pike Şınav",
+  "Inverted Row", "Ters Kürek",
+  "Bulgarian Split Squat", "Bulgar Squat",
+  "Box Squat", "Kutu Squat",
+  "Good Morning",
+  "Plank",
+  "Dead Bug",
+  "Bird Dog",
+  "Hollow Body Hold", "Hollow Body",
+  "Glute Bridge", "Kalça Köprüsü",
+  "Pallof Press (Band)", "Pallof Press",
+  "Door Frame Row", "Kapı Küreği"
+]);
+
 const workouts = {
   Day_A_Salon: {
     label: "Day A — Salon",
@@ -15,11 +32,11 @@ const workouts = {
     label: "Day A — Ev",
     subtitle: "Horizontal Push + Pull + Legs",
     exercises: [
-      { exercise: "Push-up",               sets: 3, reps: 10 },
-      { exercise: "Inverted Row",          sets: 3, reps: 8  },
-      { exercise: "Bulgarian Split Squat", sets: 3, reps: 8  },
-      { exercise: "Box Squat",             sets: 2, reps: 8  },
-      { exercise: "Diamond Push-up",       sets: 3, reps: 10 }
+      { exercise: "Şınav",                 sets: 3, reps: 10 },
+      { exercise: "Ters Kürek",            sets: 3, reps: 8  },
+      { exercise: "Bulgar Squat",          sets: 3, reps: 8  },
+      { exercise: "Kutu Squat",            sets: 2, reps: 8  },
+      { exercise: "Elmas Şınav",           sets: 3, reps: 10 }
     ]
   },
   Day_B_Salon: {
@@ -36,8 +53,8 @@ const workouts = {
     label: "Day B — Ev",
     subtitle: "Vertical Push + Pull + Hinge",
     exercises: [
-      { exercise: "Pike Push-up",           sets: 3, reps: 8  },
-      { exercise: "Door Frame Row",         sets: 3, reps: 8  },
+      { exercise: "Pike Şınav",             sets: 3, reps: 8  },
+      { exercise: "Kapı Küreği",            sets: 3, reps: 8  },
       { exercise: "Good Morning",           sets: 3, reps: 10 },
       { exercise: "Hammer Curl DB",         sets: 3, reps: 10 }
     ]
@@ -49,7 +66,7 @@ const workouts = {
       { exercise: "Plank",                  sets: 3, reps: 40 },
       { exercise: "Dead Bug",               sets: 3, reps: 10 },
       { exercise: "Bird Dog",               sets: 3, reps: 10 },
-      { exercise: "Hollow Body Hold",       sets: 3, reps: 30 },
+      { exercise: "Hollow Body",            sets: 3, reps: 30 },
       { exercise: "Hip Abduction Machine",  sets: 3, reps: 15 },
       { exercise: "Leg Curl Machine",       sets: 3, reps: 12 },
       { exercise: "Leg Extension Machine",  sets: 3, reps: 12 }
@@ -62,9 +79,9 @@ const workouts = {
       { exercise: "Plank",                  sets: 3, reps: 40 },
       { exercise: "Dead Bug",               sets: 3, reps: 10 },
       { exercise: "Bird Dog",               sets: 3, reps: 10 },
-      { exercise: "Hollow Body Hold",       sets: 3, reps: 30 },
-      { exercise: "Glute Bridge",           sets: 3, reps: 15 },
-      { exercise: "Pallof Press (Band)",    sets: 3, reps: 12 }
+      { exercise: "Hollow Body",            sets: 3, reps: 30 },
+      { exercise: "Kalça Köprüsü",          sets: 3, reps: 15 },
+      { exercise: "Pallof Press",           sets: 3, reps: 12 }
     ]
   }
 };
@@ -288,6 +305,10 @@ function loadCurrentSet() {
   $("targetReps").textContent      = item.target_reps;
   $("loggedCount").textContent     = state.logs.length;
 
+  // Bodyweight egzersizlerde kg alanını gizle
+  const isBodyweight = BODYWEIGHT_EXERCISES.has(item.exercise);
+  $("kgField").classList.toggle("hidden", isBodyweight);
+
   if (calc) {
     $("suggestionBox").classList.remove("hidden");
     $("suggMin").textContent = `${calc.minimum.kg} kg × ${calc.minimum.reps} reps`;
@@ -319,7 +340,7 @@ function saveCurrentSet(event) {
     exercise:    item.exercise,
     set_no:      item.set_no,
     target_reps: item.target_reps,
-    actual_kg:   Number($("actualKg").value),
+    actual_kg:   BODYWEIGHT_EXERCISES.has(item.exercise) ? 0 : Number($("actualKg").value),
     actual_reps: Number($("actualReps").value),
     rir:         $("actualRir").value === "" ? "" : Number($("actualRir").value),
     note:        $("actualNote").value.trim(),

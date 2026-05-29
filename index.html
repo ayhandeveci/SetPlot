@@ -124,9 +124,9 @@
 
       <form id="activeSetForm" class="card set-form">
         <div class="grid-3">
-          <label>Kg<input id="actualKg" type="number" step="0.5" placeholder="75" required /></label>
-          <label>Reps<input id="actualReps" type="number" placeholder="8" required /></label>
-          <label>RIR<input id="actualRir" type="number" step="0.5" placeholder="1" /></label>
+          <label id="kgField">Kg<input id="actualKg" type="number" inputmode="decimal" step="0.5" placeholder="75" /></label>
+          <label>Reps<input id="actualReps" type="number" inputmode="numeric" placeholder="8" required /></label>
+          <label>RIR<input id="actualRir" type="number" inputmode="decimal" step="0.5" placeholder="1" /></label>
         </div>
         <label>Not / Ağrı
           <textarea id="actualNote" rows="2" placeholder="Ağrı, form, zorlanma..."></textarea>
@@ -229,9 +229,9 @@
         <input type="hidden" id="editIndex" />
         <label>Egzersiz<input id="editExercise" type="text" required /></label>
         <div class="grid-3">
-          <label>Kg<input id="editKg" type="number" step="0.5" required /></label>
-          <label>Reps<input id="editReps" type="number" required /></label>
-          <label>RIR<input id="editRir" type="number" step="0.5" /></label>
+          <label>Kg<input id="editKg" type="number" inputmode="decimal" step="0.5" required /></label>
+          <label>Reps<input id="editReps" type="number" inputmode="numeric" required /></label>
+          <label>RIR<input id="editRir" type="number" inputmode="decimal" step="0.5" /></label>
         </div>
         <label>Not<textarea id="editNote" rows="2"></textarea></label>
         <button class="primary-btn full" type="submit">Kaydet</button>
