@@ -69,13 +69,9 @@ const workouts = {
   }
 };
 
-// Sıra: A → B → C → A → B → C ...
-const DAY_ORDER = ["Day_A", "Day_B", "Day_C"];
-
-// ─── STORAGE KEYS ──────────────────────────────────────────────────────────
-const STORAGE_KEY   = "setplot_current_workout_v2";
-const HISTORY_KEY   = "setplot_history_v2";
-const LAST_DAY_KEY  = "setplot_last_completed_day";
+const DAY_ORDER    = ["Day_A", "Day_B", "Day_C"];
+const STORAGE_KEY  = "setplot_current_workout_v2";
+const LAST_DAY_KEY = "setplot_last_completed_day";
 
 // ─── STATE ─────────────────────────────────────────────────────────────────
 const state = {
@@ -84,28 +80,16 @@ const state = {
   currentIndex:  0,
   logs:          [],
   startedAt:     null,
-  timerInterval: null
+  timerInterval: null,
+  history:       []   // loaded from CSV files, lives only this session
 };
 
-// ─── HELPERS ───────────────────────────────────────────────────────────────
 const $ = (id) => document.getElementById(id);
 
-function dayType(dayKey) {
-  // "Day_A_Salon" → "Day_A"
-  return dayKey.split("_").slice(0, 2).join("_");
-}
-
-function today() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function workoutId() {
-  return `${state.selectedDay}_${today()}`;
-}
-
-function workoutFileName() {
-  return `${state.selectedDay}_${today()}_log.csv`;
-}
+function dayType(dayKey) { return dayKey.split("_").slice(0, 2).join("_"); }
+function today()         { return new Date().toISOString().slice(0, 10); }
+function workoutId()     { return `${state.selectedDay}_${today()}`; }
+function workoutFileName(){ return `${state.selectedDay}_${today()}_log.csv`; }
 
 function showScreen(name) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
@@ -113,11 +97,8 @@ function showScreen(name) {
 }
 
 // ─── NEXT DAY LOGIC ────────────────────────────────────────────────────────
-// Reads last completed day from localStorage and returns the next day key.
-// e.g. last = "Day_A" → next = "Day_B"
-// If nothing recorded yet, returns "Day_A".
 function getNextDayType() {
-  const last = localStorage.getItem(LAST_DAY_KEY); // "Day_A" / "Day_B" / "Day_C"
+  const last = localStorage.getItem(LAST_DAY_KEY);
   if (!last) return "Day_A";
   const idx = DAY_ORDER.indexOf(last);
   return DAY_ORDER[(idx + 1) % DAY_ORDER.length];
@@ -127,46 +108,90 @@ function saveLastCompletedDay(dayKey) {
   localStorage.setItem(LAST_DAY_KEY, dayType(dayKey));
 }
 
-// ─── HISTORY ───────────────────────────────────────────────────────────────
-function loadHistory() {
-  try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; }
-  catch { return []; }
+// ─── CSV PARSER ────────────────────────────────────────────────────────────
+function parseCsv(text) {
+  const lines = text.trim().split("\n");
+  if (lines.length < 2) return [];
+  const headers = splitCsvLine(lines[0]).map(h => h.replace(/^"|"$/g, "").trim());
+  return lines.slice(1).map(line => {
+    const vals = splitCsvLine(line);
+    const obj  = {};
+    headers.forEach((h, i) => {
+      let v = (vals[i] || "").replace(/^"|"$/g, "").replace(/""/g, '"');
+      if (["set_no","target_reps","actual_kg","actual_reps"].includes(h)) v = Number(v);
+      if (h === "rir") v = v === "" ? "" : Number(v);
+      obj[h] = v;
+    });
+    return obj;
+  });
 }
 
-function saveToHistory(logs) {
-  const history = loadHistory();
-  localStorage.setItem(HISTORY_KEY, JSON.stringify([...history, ...logs]));
+function splitCsvLine(line) {
+  const result = []; let cur = ""; let inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') {
+      if (inQ && line[i+1] === '"') { cur += '"'; i++; }
+      else inQ = !inQ;
+    } else if (c === ',' && !inQ) { result.push(cur); cur = ""; }
+    else cur += c;
+  }
+  result.push(cur);
+  return result;
 }
 
+// ─── HISTORY: load from CSV files ─────────────────────────────────────────
+// Called when user picks CSV files on setup screen.
+// Reads all selected files, merges into state.history.
+function loadHistoryFromFiles(files) {
+  if (!files || files.length === 0) return;
+
+  const promises = Array.from(files).map(file => new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(parseCsv(e.target.result));
+    reader.onerror = () => resolve([]);
+    reader.readAsText(file);
+  }));
+
+  Promise.all(promises).then(results => {
+    const allRows = results.flat();
+    state.history = allRows;
+    updateHistoryStatus(allRows.length, files.length);
+  });
+}
+
+function updateHistoryStatus(rowCount, fileCount) {
+  const el = $("historyStatus");
+  if (rowCount > 0) {
+    el.textContent = `✓ ${fileCount} dosya · ${rowCount} set yüklendi`;
+    el.className = "history-status loaded";
+  } else {
+    el.textContent = "Dosya okunamadı";
+    el.className = "history-status error";
+  }
+}
+
+// ─── PROGRESSIVE OVERLOAD ──────────────────────────────────────────────────
 function getLastPerformance(exercise, dt) {
-  // dt = "Day_A" / "Day_B" / "Day_C"
-  const history = loadHistory();
-  const relevant = history
+  const relevant = state.history
     .filter(l => l.exercise === exercise && l.workout_day && l.workout_day.startsWith(dt))
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   return relevant[0] || null;
 }
 
-// ─── PROGRESSIVE OVERLOAD ──────────────────────────────────────────────────
 function calcSuggestion(last) {
   if (!last) return null;
-
   const minimum = { kg: last.actual_kg, reps: last.actual_reps };
-
   if (last.rir === "" || last.rir === null || last.rir === undefined) {
     return { minimum, suggestion: null };
   }
-
   let sKg = last.actual_kg, sReps = last.actual_reps;
-
-  if (last.rir <= 1)      { sKg = last.actual_kg + 2.5; }
-  else if (last.rir === 2){ sReps = last.actual_reps + 1; }
-  // rir >= 3 → same (still has room)
-
+  if (last.rir <= 1)       sKg   = last.actual_kg + 2.5;
+  else if (last.rir === 2) sReps = last.actual_reps + 1;
   return { minimum, suggestion: { kg: sKg, reps: sReps } };
 }
 
-// ─── WORKOUT SELECTION UI ──────────────────────────────────────────────────
+// ─── WORKOUT SELECTION ─────────────────────────────────────────────────────
 function selectWorkout(day) {
   state.selectedDay = day;
   document.querySelectorAll(".workout-option").forEach(btn => {
@@ -179,20 +204,13 @@ document.querySelectorAll(".workout-option").forEach(btn => {
 });
 
 // ─── NEXT DAY BANNER ───────────────────────────────────────────────────────
-// Shows a small banner on setup screen: "Sıradaki: Gün B"
-// and auto-selects the Salon version of that day.
 function applyNextDaySuggestion() {
-  const next = getNextDayType(); // "Day_A" / "Day_B" / "Day_C"
+  const next           = getNextDayType();
   const defaultVariant = next + "_Salon";
+  if (workouts[defaultVariant]) selectWorkout(defaultVariant);
 
-  // Auto-select in UI
-  if (workouts[defaultVariant]) {
-    selectWorkout(defaultVariant);
-  }
-
-  // Show banner
   const banner = $("nextDayBanner");
-  const last = localStorage.getItem(LAST_DAY_KEY);
+  const last   = localStorage.getItem(LAST_DAY_KEY);
   if (last) {
     const labels = { Day_A: "Gün A", Day_B: "Gün B", Day_C: "Gün C" };
     banner.textContent = `Sıradaki: ${labels[next]} · Son tamamlanan: ${labels[last]}`;
@@ -202,7 +220,12 @@ function applyNextDaySuggestion() {
   }
 }
 
-// ─── BUILD FLAT SET LIST ───────────────────────────────────────────────────
+// ─── CSV FILE INPUT ────────────────────────────────────────────────────────
+$("historyFileInput").addEventListener("change", (e) => {
+  loadHistoryFromFiles(e.target.files);
+});
+
+// ─── BUILD FLAT SETS ───────────────────────────────────────────────────────
 function buildWorkout(day) {
   const flat = [];
   workouts[day].exercises.forEach(item => {
@@ -238,7 +261,7 @@ $("startWorkoutBtn").addEventListener("click", () => startWorkout(false));
 // ─── TIMER ─────────────────────────────────────────────────────────────────
 function startTimer() {
   if (state.timerInterval) return;
-  const start = state.startedAt ? new Date(state.startedAt) : new Date();
+  const start     = state.startedAt ? new Date(state.startedAt) : new Date();
   state.startedAt = start.toISOString();
   state.timerInterval = setInterval(() => {
     const diff = Math.floor((new Date() - start) / 1000);
@@ -258,14 +281,13 @@ function loadCurrentSet() {
   const last     = getLastPerformance(item.exercise, dt);
   const calc     = calcSuggestion(last);
 
-  $("activeDay").textContent      = workouts[state.selectedDay].label;
-  $("activeProgress").textContent = `Set ${state.currentIndex + 1} / ${state.flatSets.length}`;
+  $("activeDay").textContent       = workouts[state.selectedDay].label;
+  $("activeProgress").textContent  = `Set ${state.currentIndex + 1} / ${state.flatSets.length}`;
   $("currentExercise").textContent = item.exercise;
-  $("targetSet").textContent      = `${item.set_no}/${item.total_sets_for_exercise}`;
-  $("targetReps").textContent     = item.target_reps;
-  $("loggedCount").textContent    = state.logs.length;
+  $("targetSet").textContent       = `${item.set_no}/${item.total_sets_for_exercise}`;
+  $("targetReps").textContent      = item.target_reps;
+  $("loggedCount").textContent     = state.logs.length;
 
-  // Suggestion box
   if (calc) {
     $("suggestionBox").classList.remove("hidden");
     $("suggMin").textContent = `${calc.minimum.kg} kg × ${calc.minimum.reps} reps`;
@@ -279,18 +301,17 @@ function loadCurrentSet() {
     $("suggestionBox").classList.add("hidden");
   }
 
-  $("actualKg").value   = existing ? existing.actual_kg   : "";
-  $("actualReps").value = existing ? existing.actual_reps  : item.target_reps;
-  $("actualRir").value  = existing ? existing.rir          : "";
-  $("actualNote").value = existing ? existing.note         : "";
+  $("actualKg").value   = existing ? existing.actual_kg  : "";
+  $("actualReps").value = existing ? existing.actual_reps : item.target_reps;
+  $("actualRir").value  = existing ? existing.rir         : "";
+  $("actualNote").value = existing ? existing.note        : "";
 }
 
 // ─── SAVE SET ──────────────────────────────────────────────────────────────
 function saveCurrentSet(event) {
   event.preventDefault();
   const item = state.flatSets[state.currentIndex];
-
-  const log = {
+  const log  = {
     flat_index:  state.currentIndex,
     workout_id:  workoutId(),
     workout_day: state.selectedDay,
@@ -318,7 +339,6 @@ function saveCurrentSet(event) {
 
 $("activeSetForm").addEventListener("submit", saveCurrentSet);
 
-// ─── PREVIOUS SET ──────────────────────────────────────────────────────────
 function previousSet() {
   if (state.currentIndex > 0) {
     state.currentIndex -= 1;
@@ -333,11 +353,8 @@ function addCustomExercise() {
   const name = $("customExerciseInput").value.trim();
   if (!name) return;
   state.flatSets.splice(state.currentIndex + 1, 0, {
-    workout_day:             state.selectedDay,
-    exercise:                name,
-    set_no:                  1,
-    total_sets_for_exercise: 1,
-    target_reps:             ""
+    workout_day: state.selectedDay, exercise: name,
+    set_no: 1, total_sets_for_exercise: 1, target_reps: ""
   });
   $("customExerciseInput").value = "";
   saveLocal();
@@ -373,7 +390,6 @@ function renderEditList() {
   });
 }
 
-// ─── EDIT MODAL ────────────────────────────────────────────────────────────
 function openEditModal(idx) {
   const log = state.logs.find(l => l.flat_index === idx);
   if (!log) return;
@@ -413,8 +429,7 @@ $("deleteSetBtn").addEventListener("click", () => {
 
 // ─── FINISH ────────────────────────────────────────────────────────────────
 function finishWorkout() {
-  saveToHistory(state.logs);
-  saveLastCompletedDay(state.selectedDay);   // ← sıradaki gün için kayıt
+  saveLastCompletedDay(state.selectedDay);
   renderSummary();
   showScreen("Summary");
   exportCsv();
@@ -424,10 +439,12 @@ $("finishBtn").addEventListener("click", finishWorkout);
 
 // ─── SUMMARY ───────────────────────────────────────────────────────────────
 function renderSummary() {
-  const rows         = state.logs.slice().sort((a, b) => a.flat_index - b.flat_index);
-  const volume       = rows.reduce((sum, r) => sum + r.actual_kg * r.actual_reps, 0);
+  const rows          = state.logs.slice().sort((a, b) => a.flat_index - b.flat_index);
+  const volume        = rows.reduce((sum, r) => sum + r.actual_kg * r.actual_reps, 0);
   const exerciseCount = new Set(rows.map(r => r.exercise)).size;
-  const notes        = rows.filter(r => r.note).length;
+  const notes         = rows.filter(r => r.note).length;
+  const next          = getNextDayType();
+  const labels        = { Day_A: "Gün A", Day_B: "Gün B", Day_C: "Gün C" };
 
   $("summaryTitle").textContent     = workouts[state.selectedDay].label + " Tamamlandı";
   $("summaryFileName").textContent  = workoutFileName();
@@ -436,11 +453,7 @@ function renderSummary() {
   $("summaryExercises").textContent = exerciseCount;
   $("summaryNotes").textContent     = notes;
   $("csvPreview").textContent       = toCsv(rows);
-
-  // Show next day hint on summary screen
-  const next   = getNextDayType();
-  const labels = { Day_A: "Gün A", Day_B: "Gün B", Day_C: "Gün C" };
-  $("summaryNextDay").textContent = `Sıradaki antrenman: ${labels[next]}`;
+  $("summaryNextDay").textContent   = `Sıradaki antrenman: ${labels[next]}`;
 }
 
 // ─── CSV ───────────────────────────────────────────────────────────────────
@@ -463,9 +476,13 @@ $("downloadBtn").addEventListener("click", exportCsv);
 
 // ─── NEW WORKOUT ───────────────────────────────────────────────────────────
 function newWorkout() {
-  state.flatSets = []; state.logs = []; state.currentIndex = 0; state.startedAt = null;
+  state.flatSets = []; state.logs = []; state.currentIndex = 0;
+  state.startedAt = null; state.history = [];
   clearInterval(state.timerInterval); state.timerInterval = null;
   $("timer").textContent = "00:00";
+  $("historyStatus").textContent = "";
+  $("historyStatus").className = "history-status";
+  $("historyFileInput").value = "";
   localStorage.removeItem(STORAGE_KEY);
   applyNextDaySuggestion();
   showResumeIfAny();
@@ -473,7 +490,7 @@ function newWorkout() {
 }
 $("newWorkoutBtn").addEventListener("click", newWorkout);
 
-// ─── LOCAL PERSIST ─────────────────────────────────────────────────────────
+// ─── LOCAL PERSIST (active workout only) ───────────────────────────────────
 function saveLocal() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({
     selectedDay:  state.selectedDay,

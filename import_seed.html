@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>SetPlot — Geçmiş Yükle</title>
+  <style>
+    body { font-family: -apple-system, sans-serif; background: #090b0e; color: #f5f7fb; padding: 32px 16px; max-width: 520px; margin: 0 auto; }
+    h2 { color: #78ff9a; }
+    p { color: #9aa6b2; line-height: 1.6; }
+    .btn { display: block; width: 100%; padding: 16px; border-radius: 18px; border: 0; font-size: 16px; font-weight: 900; cursor: pointer; margin-top: 12px; }
+    .primary { background: linear-gradient(135deg,#78ff9a,#55d6ff); color: #06110b; }
+    .secondary { background: #202833; color: #f5f7fb; border: 1px solid #28323d; }
+    #status { margin-top: 16px; padding: 14px; border-radius: 14px; background: #12171d; color: #78ff9a; font-size: 14px; display: none; }
+    input[type=file] { display: none; }
+  </style>
+</head>
+<body>
+  <h2>Geçmiş Verileri Yükle</h2>
+  <p>Bu sayfa <strong>bir kerelik</strong> kullanım içindir. CSV dosyasını seçince geçmiş veriler SetPlot'un localStorage'ına yazılır. Sonra ana uygulamaya geçebilirsin.</p>
+  <p>Yüklenecek dosya: <code>setplot_seed_history.csv</code></p>
+
+  <input type="file" id="fileInput" accept=".csv"/>
+  <button class="btn primary" onclick="document.getElementById('fileInput').click()">CSV Dosyasını Seç</button>
+  <button class="btn secondary" onclick="window.location='index.html'">Ana Uygulamaya Geç →</button>
+
+  <div id="status"></div>
+
+  <script>
+    const HISTORY_KEY = "setplot_history_v2";
+    const LAST_DAY_KEY = "setplot_last_completed_day";
+
+    document.getElementById("fileInput").addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const text = ev.target.result;
+        const rows = parseCsv(text);
+        if (!rows.length) { showStatus("CSV boş veya okunamadı.", "error"); return; }
+
+        // Merge with existing history (don't overwrite)
+        let existing = [];
+        try { existing = JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; } catch {}
+
+        const merged = [...existing, ...rows];
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(merged));
+
+        // Set last completed day based on latest date in seed
+        const sorted = rows.slice().sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+        if (sorted[0]) {
+          const day = sorted[0].workout_day.split("_").slice(0,2).join("_"); // "Day_A"
+          localStorage.setItem(LAST_DAY_KEY, day);
+        }
+
+        showStatus(`✓ ${rows.length} set yüklendi. Sıradaki gün otomatik ayarlandı.`);
+      };
+      reader.readAsText(file);
+    });
+
+    function parseCsv(text) {
+      const lines = text.trim().split("\n");
+      const headers = lines[0].split(",").map(h => h.replace(/^"|"$/g, "").trim());
+      return lines.slice(1).map(line => {
+        const vals = splitCsvLine(line);
+        const obj = {};
+        headers.forEach((h, i) => {
+          let v = (vals[i] || "").replace(/^"|"$/g, "").replace(/""/g, '"');
+          // Coerce numbers
+          if (["set_no","target_reps","actual_kg","actual_reps"].includes(h)) v = Number(v);
+          if (h === "rir") v = v === "" ? "" : Number(v);
+          obj[h] = v;
+        });
+        return obj;
+      });
+    }
+
+    function splitCsvLine(line) {
+      const result = []; let cur = ""; let inQ = false;
+      for (let i = 0; i < line.length; i++) {
+        const c = line[i];
+        if (c === '"') { if (inQ && line[i+1] === '"') { cur += '"'; i++; } else inQ = !inQ; }
+        else if (c === ',' && !inQ) { result.push(cur); cur = ""; }
+        else cur += c;
+      }
+      result.push(cur);
+      return result;
+    }
+
+    function showStatus(msg) {
+      const el = document.getElementById("status");
+      el.textContent = msg;
+      el.style.display = "block";
+    }
+  </script>
+</body>
+</html>
